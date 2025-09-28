@@ -1,0 +1,87 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Release version (e.g., v1.0.0)'
+        required: true
+        type: string
+
+jobs:
+  build-and-release:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Install dependencies
+      run: npm ci
+      
+    - name: Build apps
+      run: npm run build
+      
+    - name: Create release artifact
+      run: npm run release
+      
+    - name: Get version
+      id: get_version
+      run: |
+        if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+          echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+        else
+          echo "version=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+        fi
+        
+    - name: Read release info
+      id: release_info
+      run: |
+        VERSION=$(node -p "require('./package.json').version")
+        echo "package_version=${VERSION}" >> $GITHUB_OUTPUT
+        
+    - name: Create GitHub Release
+      uses: softprops/action-gh-release@v1
+      with:
+        tag_name: ${{ steps.get_version.outputs.version }}
+        name: Release ${{ steps.get_version.outputs.version }}
+        body: |
+          ## MiniOS App Catalog ${{ steps.get_version.outputs.version }}
+          
+          This release contains:
+          - 📱 **Calculator App** - Simple and powerful calculator
+          - 🎨 **Color App** - Beautiful color picker application  
+          - 📝 **Notes App** - Take notes anywhere, anytime
+          - 📋 **catalog.json** - App catalog metadata
+          
+          ### Installation
+          1. Download the individual app zip files
+          2. Extract to your MiniOS apps directory
+          3. Use catalog.json for app discovery and management
+          
+          ### Files in this release:
+          - `catalog.json` - App catalog with metadata
+          - `calculator.zip` - Calculator app package
+          - `colorapp.zip` - Color picker app package  
+          - `notes.zip` - Notes app package
+          - `minios-app-catalog-v${{ steps.release_info.outputs.package_version }}.zip` - Complete release bundle
+          
+        files: |
+          dist/catalog.json
+          dist/calculator.zip
+          dist/colorapp.zip
+          dist/notes.zip
+          releases/minios-app-catalog-v${{ steps.release_info.outputs.package_version }}.zip
+        draft: false
+        prerelease: false
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

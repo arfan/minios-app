@@ -1,0 +1,26 @@
+{
+  "name": "minios-app-catalog",
+  "version": "1.0.0",
+  "description": "MiniOS App Catalog with Calculator, ColorApp, and Notes applications",
+  "main": "catalog.json",
+  "scripts": {
+    "build": "node scripts/build.js",
+    "release": "node scripts/release.js",
+    "version": "node scripts/update-version.js",
+    "demo": "node scripts/demo.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/arfan/minios-app.git"
+  },
+  "keywords": [
+    "minios",
+    "apps",
+    "catalog"
+  ],
+  "author": "Abdul Arfan",
+  "devDependencies": {
+    "archiver": "^6.0.1",
+    "fs-extra": "^11.1.1"
+  }
+}

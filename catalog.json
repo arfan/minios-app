@@ -7,7 +7,7 @@
       "version": "1.0.0",
       "description": "A beautiful color picker application",
       "icon": "https://example.com/icons/colorapp.png",
-      "downloadUrl": "https://github.com/arfan/minios-app/releases/download/v0.0.1/colorapp.zip",
+      "downloadUrl": "https://github.com/arfan/minios-app/releases/download/v1.0.0/colorapp.zip",
       "category": "Tools",
       "size": "2.5MB"
     },
@@ -18,7 +18,7 @@
       "version": "2.1.0",
       "description": "Simple and powerful calculator",
       "icon": "https://example.com/icons/calculator.png",
-      "downloadUrl": "https://github.com/arfan/minios-app/releases/download/v0.0.1/calculator.zip",
+      "downloadUrl": "https://github.com/arfan/minios-app/releases/download/v1.0.0/calculator.zip",
       "category": "Productivity",
       "size": "1.2MB"
     },
@@ -29,7 +29,7 @@
       "version": "1.5.0",
       "description": "Take notes anywhere, anytime",
       "icon": "https://example.com/icons/notes.png",
-      "downloadUrl": "https://github.com/arfan/minios-app/releases/download/v0.0.1/notes.zip",
+      "downloadUrl": "https://github.com/arfan/minios-app/releases/download/v1.0.0/notes.zip",
       "category": "Productivity",
       "size": "3.1MB"
     }
