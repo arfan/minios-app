@@ -1,8 +1,0 @@
-{
-  "id": "com.example.colorapp",
-  "name": "Color Changer",
-  "version": "1.0",
-  "author": "MiniOS Demo",
-  "entry": "index.html",
-  "icon": "icon.png"
-}

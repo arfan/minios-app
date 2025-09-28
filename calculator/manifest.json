@@ -1,8 +1,0 @@
-{
-  "id": "com.example.calculator",
-  "name": "Calculator",
-  "version": "1.0",
-  "author": "MiniOS Demo",
-  "entry": "index.html",
-  "icon": "icon.png"
-}
