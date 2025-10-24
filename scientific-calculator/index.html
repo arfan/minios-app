@@ -161,7 +161,6 @@
 </head>
 <body>
     <div class="calculator">
-        <div class="brand">CASIO</div>
         <div class="display-container">
             <div class="mode-indicator" id="mode">DEG</div>
             <div class="memory-indicator" id="memory"></div>
@@ -234,19 +233,17 @@
                 this.secondaryDisplay = document.getElementById('secondaryDisplay');
                 this.modeDisplay = document.getElementById('mode');
                 this.memoryDisplay = document.getElementById('memory');
-                this.currentValue = '0';
-                this.previousValue = '';
-                this.operator = null;
-                this.waitingForOperand = false;
+                this.displayValue = '0';
                 this.memory = 0;
                 this.angleMode = 'DEG'; // DEG, RAD, GRAD
                 this.shiftActive = false;
-                this.expression = '';
+                this.equation = '';
+                this.showingResult = false;
             }
 
             updateDisplay() {
-                this.display.textContent = this.currentValue;
-                this.secondaryDisplay.textContent = this.expression;
+                this.display.textContent = this.displayValue;
+                this.secondaryDisplay.textContent = this.equation;
                 if (this.memory !== 0) {
                     this.memoryDisplay.textContent = 'M';
                 } else {
@@ -255,52 +252,41 @@
             }
 
             appendNumber(num) {
-                if (this.waitingForOperand) {
-                    this.currentValue = num;
-                    this.waitingForOperand = false;
-                } else {
-                    if (this.currentValue === '0' && num !== '.') {
-                        this.currentValue = num;
-                    } else {
-                        if (num === '.' && this.currentValue.includes('.')) return;
-                        this.currentValue += num;
-                    }
+                if (this.showingResult) {
+                    this.clear();
+                    this.showingResult = false;
                 }
+                
+                this.equation += num;
                 this.updateDisplay();
             }
 
             clear() {
-                this.currentValue = '0';
-                this.previousValue = '';
-                this.operator = null;
-                this.waitingForOperand = false;
-                this.expression = '';
+                this.displayValue = '0';
+                this.equation = '';
+                this.showingResult = false;
                 this.updateDisplay();
             }
 
             delete() {
-                if (this.currentValue.length > 1) {
-                    this.currentValue = this.currentValue.slice(0, -1);
-                } else {
-                    this.currentValue = '0';
+                if (this.showingResult) {
+                    this.clear();
+                    return;
                 }
+                
+                if (this.equation.length > 0) {
+                    this.equation = this.equation.slice(0, -1);
+                } 
                 this.updateDisplay();
             }
 
-            setOperator(nextOperator) {
-                const inputValue = parseFloat(this.currentValue);
-
-                if (this.previousValue === '' && !isNaN(inputValue)) {
-                    this.previousValue = inputValue;
-                } else if (this.operator) {
-                    const result = this.performOperation(this.previousValue, inputValue, this.operator);
-                    this.currentValue = String(result);
-                    this.previousValue = result;
+            setOperator(operator) {
+                if (this.showingResult) {
+                    this.equation = this.displayValue + this.getOperatorSymbol(operator);
+                    this.showingResult = false;
+                } else {
+                    this.equation += this.getOperatorSymbol(operator);
                 }
-
-                this.waitingForOperand = true;
-                this.operator = nextOperator;
-                this.expression = `${this.previousValue} ${this.getOperatorSymbol(nextOperator)}`;
                 this.updateDisplay();
             }
 
@@ -325,16 +311,41 @@
             }
 
             calculate() {
-                const inputValue = parseFloat(this.currentValue);
-
-                if (this.operator && this.previousValue !== '') {
-                    const result = this.performOperation(this.previousValue, inputValue, this.operator);
-                    this.currentValue = String(result);
-                    this.expression = '';
-                    this.previousValue = '';
-                    this.operator = null;
-                    this.waitingForOperand = false;
+                if (!this.equation || this.equation.trim() === '') {
+                    return;
                 }
+                
+                try {
+                    // Convert display symbols to JavaScript operators
+                    let expression = this.equation
+                        .replace(/×/g, '*')
+                        .replace(/÷/g, '/')
+                        .replace(/−/g, '-');
+                    
+                    // Handle √ as unary operator - convert √number to Math.sqrt(number)
+                    // This regex finds √ followed by a number (with optional decimal) or parentheses
+                    expression = expression.replace(/√([0-9]*\.?[0-9]+|\([^)]+\))/g, 'Math.sqrt($1)');
+                    
+                    // Basic validation for dangerous characters
+                    if (/[^0-9+\-*/().MathsqrtPI\s]/g.test(expression)) {
+                        throw new Error('Invalid characters');
+                    }
+                    
+                    // Evaluate the expression
+                    const result = Function('"use strict"; return (' + expression + ')')();
+                    
+                    if (!isFinite(result)) {
+                        throw new Error('Result is not finite');
+                    }
+                    
+                    this.displayValue = String(result);
+                    this.showingResult = true;
+                    
+                } catch (error) {
+                    this.displayValue = 'Syntax Error';
+                    this.showingResult = true;
+                }
+                
                 this.updateDisplay();
             }
 
@@ -357,23 +368,29 @@
             }
 
             sin() {
-                const value = parseFloat(this.currentValue);
-                this.currentValue = String(Math.sin(this.toRadians(value)));
-                this.waitingForOperand = true;
+                if (this.showingResult) {
+                    this.clear();
+                    this.showingResult = false;
+                }
+                this.equation += 'sin(';
                 this.updateDisplay();
             }
 
             cos() {
-                const value = parseFloat(this.currentValue);
-                this.currentValue = String(Math.cos(this.toRadians(value)));
-                this.waitingForOperand = true;
+                if (this.showingResult) {
+                    this.clear();
+                    this.showingResult = false;
+                }
+                this.equation += 'cos(';
                 this.updateDisplay();
             }
 
             tan() {
-                const value = parseFloat(this.currentValue);
-                this.currentValue = String(Math.tan(this.toRadians(value)));
-                this.waitingForOperand = true;
+                if (this.showingResult) {
+                    this.clear();
+                    this.showingResult = false;
+                }
+                this.equation += 'tan(';
                 this.updateDisplay();
             }
 
@@ -429,13 +446,11 @@
             }
 
             sqrt() {
-                const value = parseFloat(this.currentValue);
-                if (value < 0) {
-                    this.currentValue = 'Error';
-                } else {
-                    this.currentValue = String(Math.sqrt(value));
+                if (this.showingResult) {
+                    this.clear();
+                    this.showingResult = false;
                 }
-                this.waitingForOperand = true;
+                this.equation += '√';
                 this.updateDisplay();
             }
 
@@ -476,18 +491,28 @@
             }
 
             leftParen() {
-                this.currentValue += '(';
+                if (this.showingResult) {
+                    this.clear();
+                    this.showingResult = false;
+                }
+                this.equation += '(';
                 this.updateDisplay();
             }
 
             rightParen() {
-                this.currentValue += ')';
+                if (this.showingResult) {
+                    return;
+                }
+                this.equation += ')';
                 this.updateDisplay();
             }
 
             pi() {
-                this.currentValue = String(Math.PI);
-                this.waitingForOperand = true;
+                if (this.showingResult) {
+                    this.clear();
+                    this.showingResult = false;
+                }
+                this.equation += Math.PI.toString();
                 this.updateDisplay();
             }
 
@@ -497,18 +522,21 @@
             }
 
             memRecall() {
-                this.currentValue = String(this.memory);
-                this.waitingForOperand = true;
+                if (this.showingResult) {
+                    this.clear();
+                    this.showingResult = false;
+                }
+                this.equation += String(this.memory);
                 this.updateDisplay();
             }
 
             memAdd() {
-                this.memory += parseFloat(this.currentValue);
+                this.memory += parseFloat(this.displayValue);
                 this.updateDisplay();
             }
 
             memSubtract() {
-                this.memory -= parseFloat(this.currentValue);
+                this.memory -= parseFloat(this.displayValue);
                 this.updateDisplay();
             }
 
